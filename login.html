@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zococity · Acceso</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f3f4f6;display:flex;align-items:center;justify-content:center;min-height:100vh}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:40px;width:100%;max-width:380px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:28px;justify-content:center}
+.logo-icon{width:36px;height:36px;background:#2563eb;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px}
+.logo-name{font-size:18px;font-weight:700}
+h2{font-size:16px;font-weight:600;margin-bottom:4px;text-align:center}
+.sub{font-size:13px;color:#6b7280;text-align:center;margin-bottom:28px}
+.field{margin-bottom:16px}
+label{display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
+input{width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:7px;font-size:14px;font-family:'Inter',sans-serif;outline:none;transition:border .15s,box-shadow .15s;color:#111827}
+input:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.btn{width:100%;padding:11px;background:#2563eb;color:#fff;border:none;border-radius:7px;font-size:14px;font-weight:600;cursor:pointer;margin-top:4px;transition:background .15s;font-family:'Inter',sans-serif}
+.btn:hover{background:#1d4ed8}
+.btn:disabled{background:#93c5fd;cursor:not-allowed}
+.error{display:none;margin-top:14px;padding:10px 14px;background:#fef2f2;border:1px solid #fecaca;border-radius:7px;font-size:13px;color:#991b1b;text-align:center}
+.error.show{display:block}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <div class="logo-icon">Z</div>
+    <span class="logo-name">Zococity</span>
+  </div>
+  <h2>Acceso al dashboard</h2>
+  <p class="sub">Introduce tus credenciales para continuar</p>
+  <form onsubmit="doLogin(event)">
+    <div class="field">
+      <label>Usuario</label>
+      <input type="text" id="user" autocomplete="username" placeholder="Usuario" required>
+    </div>
+    <div class="field">
+      <label>Contraseña</label>
+      <input type="password" id="pass" autocomplete="current-password" placeholder="Contraseña" required>
+    </div>
+    <button class="btn" type="submit" id="btn">Entrar</button>
+    <div class="error" id="error">Usuario o contraseña incorrectos</div>
+  </form>
+</div>
+<script>
+var AUTH_USER = 'Zococity';
+var AUTH_HASH = '25ecb7e4d3db7e710cc89add6043e21561f07b93b8ab647c96bd308aece67d32';
+var REDIRECT  = sessionStorage.getItem('auth_redirect') || 'index.html';
+
+async function sha256(str){
+  var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');
+}
+
+async function doLogin(e){
+  e.preventDefault();
+  var btn = document.getElementById('btn');
+  btn.disabled = true;
+  btn.textContent = 'Verificando...';
+  var user = document.getElementById('user').value.trim();
+  var pass = document.getElementById('pass').value;
+  var hash = await sha256(pass);
+  if(user === AUTH_USER && hash === AUTH_HASH){
+    sessionStorage.setItem('zc_auth', '1');
+    sessionStorage.removeItem('auth_redirect');
+    window.location.href = REDIRECT;
+  } else {
+    document.getElementById('error').classList.add('show');
+    btn.disabled = false;
+    btn.textContent = 'Entrar';
+  }
+}
+</script>
+</body>
+</html>
