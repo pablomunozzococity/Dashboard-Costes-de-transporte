@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zococity · Subir datos</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f3f4f6;color:#111827;min-height:100vh;display:flex;flex-direction:column}
+.header{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:52px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:28px;height:28px;background:#2563eb;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px}
+.logo-name{font-size:15px;font-weight:600}
+.logo-div{color:#d1d5db;margin:0 6px}
+.logo-sub{font-size:13px;color:#6b7280}
+.back-btn{font-size:13px;color:#2563eb;text-decoration:none;font-weight:500;display:flex;align-items:center;gap:5px;padding:6px 12px;border:1px solid #dbeafe;border-radius:6px;background:#eff6ff;transition:all .15s}
+.back-btn:hover{background:#dbeafe}
+.main{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 24px}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:40px;max-width:560px;width:100%;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.card-title{font-size:20px;font-weight:700;margin-bottom:6px}
+.card-sub{font-size:14px;color:#6b7280;margin-bottom:32px}
+.drop-zone{border:2px dashed #d1d5db;border-radius:10px;padding:48px 24px;text-align:center;cursor:pointer;transition:all .2s;background:#f9fafb}
+.drop-zone:hover,.drop-zone.drag{border-color:#2563eb;background:#eff6ff}
+.drop-icon{font-size:40px;margin-bottom:12px}
+.drop-title{font-size:15px;font-weight:600;margin-bottom:4px}
+.drop-sub{font-size:13px;color:#6b7280}
+.drop-link{color:#2563eb;cursor:pointer;text-decoration:underline}
+input[type=file]{display:none}
+.file-selected{display:none;align-items:center;gap:12px;padding:14px 16px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;margin-top:16px}
+.file-selected.show{display:flex}
+.file-icon{font-size:24px}
+.file-info{flex:1}
+.file-name{font-size:13px;font-weight:600;color:#065f46}
+.file-size{font-size:12px;color:#6b7280}
+.btn-upload{width:100%;margin-top:20px;padding:12px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-upload:hover{background:#1d4ed8}
+.btn-upload:disabled{background:#93c5fd;cursor:not-allowed}
+.progress{display:none;margin-top:20px}
+.progress.show{display:block}
+.progress-bar-wrap{background:#e5e7eb;border-radius:99px;height:8px;overflow:hidden;margin-bottom:8px}
+.progress-bar{background:#2563eb;height:100%;border-radius:99px;transition:width .3s;width:0%}
+.progress-text{font-size:13px;color:#6b7280;text-align:center}
+.result{display:none;margin-top:20px;padding:16px;border-radius:8px;font-size:14px;font-weight:500}
+.result.show{display:block}
+.result.ok{background:#f0fdf4;border:1px solid #bbf7d0;color:#065f46}
+.result.err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+.mapping-info{margin-top:24px;padding:16px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px}
+.mapping-title{font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.mapping-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.mapping-item{font-size:12px;color:#374151}
+.mapping-item span{color:#2563eb;font-weight:500}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">Z</div>
+    <span class="logo-name">Zococity</span>
+    <span class="logo-div">|</span>
+    <span class="logo-sub">Subir datos</span>
+  </div>
+  <a href="index.html" class="back-btn">← Ver dashboard</a>
+</div>
+
+<div class="main">
+  <div class="card">
+    <div class="card-title">Actualizar datos del dashboard</div>
+    <div class="card-sub">Arrastra tu Excel o haz clic para seleccionarlo. Los datos nuevos se añaden al histórico; los existentes (misma referencia) se actualizan.</div>
+
+    <div class="drop-zone" id="dropZone">
+      <div class="drop-icon">📊</div>
+      <div class="drop-title">Arrastra el Excel aquí</div>
+      <div class="drop-sub">o <span class="drop-link" onclick="document.getElementById('fileInput').click()">selecciona un archivo</span></div>
+      <div class="drop-sub" style="margin-top:8px;font-size:12px;color:#9ca3af">.xlsx · .xls · .csv</div>
+    </div>
+    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+
+    <div class="file-selected" id="fileSelected">
+      <div class="file-icon">📄</div>
+      <div class="file-info">
+        <div class="file-name" id="fileName"></div>
+        <div class="file-size" id="fileSize"></div>
+      </div>
+    </div>
+
+    <button class="btn-upload" id="btnUpload" disabled onclick="uploadFile()">
+      <span>⬆</span> Subir y actualizar dashboard
+    </button>
+
+    <div class="progress" id="progress">
+      <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
+      <div class="progress-text" id="progressText">Procesando...</div>
+    </div>
+
+    <div class="result" id="result"></div>
+
+    <div class="mapping-info">
+      <div class="mapping-title">Columnas esperadas en el Excel</div>
+      <div class="mapping-grid">
+        <div class="mapping-item"><span>ref</span> — Referencia pedido</div>
+        <div class="mapping-item"><span>cliente</span> — Nombre cliente</div>
+        <div class="mapping-item"><span>fecha_pedido</span> — Fecha pedido</div>
+        <div class="mapping-item"><span>comercial</span> — Comercial</div>
+        <div class="mapping-item"><span>importe</span> — Importe €</div>
+        <div class="mapping-item"><span>fecha_entrega</span> — Fecha entrega</div>
+        <div class="mapping-item"><span>transportista_alb</span> — Transport. albarán</div>
+        <div class="mapping-item"><span>transportista_fact</span> — Transport. factura</div>
+        <div class="mapping-item"><span>coste_envio</span> — Coste envío €</div>
+        <div class="mapping-item"><span>bultos</span> — Nº bultos</div>
+        <div class="mapping-item"><span>kg</span> — Peso kg</div>
+        <div class="mapping-item"><span>tipo</span> — Tipo pedido</div>
+        <div class="mapping-item"><span>fecha_efectiva</span> — Fecha efectiva</div>
+        <div class="mapping-item"><span>sin_envio</span> — Sin envío (true/false)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var SUPA = supabase.createClient(
+  'https://msvnmdmgkejrduextcho.supabase.co',
+  'sb_publishable_Fnj1liKEE1O_JIq-O8Q-oA_HufI0IPb'
+);
+
+var currentFile = null;
+
+// Drag & drop
+var dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', function(e){ e.preventDefault(); dz.classList.add('drag'); });
+dz.addEventListener('dragleave', function(){ dz.classList.remove('drag'); });
+dz.addEventListener('drop', function(e){
+  e.preventDefault(); dz.classList.remove('drag');
+  var f = e.dataTransfer.files[0];
+  if(f) setFile(f);
+});
+dz.addEventListener('click', function(){ document.getElementById('fileInput').click(); });
+document.getElementById('fileInput').addEventListener('change', function(){
+  if(this.files[0]) setFile(this.files[0]);
+});
+
+function setFile(f){
+  currentFile = f;
+  document.getElementById('fileName').textContent = f.name;
+  document.getElementById('fileSize').textContent = (f.size/1024).toFixed(1) + ' KB';
+  document.getElementById('fileSelected').classList.add('show');
+  document.getElementById('btnUpload').disabled = false;
+  document.getElementById('result').classList.remove('show');
+}
+
+function parseDate(v){
+  if(!v || v === '' || v === 'Sin datos') return null;
+  if(typeof v === 'number'){
+    // Excel serial date
+    var d = new Date((v - 25569) * 86400 * 1000);
+    return d.toISOString().slice(0,10);
+  }
+  var s = String(v).trim();
+  if(!s || s === '') return null;
+  // DD/MM/YYYY
+  var m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(m) return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');
+  // YYYY-MM-DD
+  if(s.match(/^\d{4}-\d{2}-\d{2}/)) return s.slice(0,10);
+  return null;
+}
+
+function parseNum(v){
+  if(v === null || v === undefined || v === '') return 0;
+  if(typeof v === 'number') return v;
+  return parseFloat(String(v).replace(',','.')) || 0;
+}
+
+function parseBool(v){
+  if(typeof v === 'boolean') return v;
+  var s = String(v).toLowerCase().trim();
+  return s === 'true' || s === 'si' || s === 'sí' || s === '1' || s === 'yes';
+}
+
+function mapRow(row){
+  return {
+    ref: String(row['ref'] || row['Ref'] || row['REF'] || row['referencia'] || row['Referencia'] || '').trim(),
+    cliente: String(row['cliente'] || row['Cliente'] || row['CLIENTE'] || '').trim() || 'Sin cliente',
+    fecha_pedido: parseDate(row['fecha_pedido'] || row['Fecha pedido'] || row['Fecha Pedido'] || row['FECHA_PEDIDO']),
+    comercial: String(row['comercial'] || row['Comercial'] || row['COMERCIAL'] || '').trim() || 'Sin asignar',
+    importe: parseNum(row['importe'] || row['Importe'] || row['IMPORTE']),
+    fecha_entrega: parseDate(row['fecha_entrega'] || row['Fecha entrega'] || row['Fecha Entrega']),
+    transportista_alb: String(row['transportista_alb'] || row['Transportista alb'] || row['Transportista Alb'] || row['transportista'] || row['Transportista'] || '').trim() || 'Sin datos',
+    transportista_fact: String(row['transportista_fact'] || row['Transportista fact'] || row['Transportista Fact'] || '').trim() || 'Sin datos',
+    coste_envio: parseNum(row['coste_envio'] || row['Coste envio'] || row['Coste Envio'] || row['coste'] || row['Coste']),
+    bultos: parseNum(row['bultos'] || row['Bultos'] || row['BULTOS']),
+    kg: parseNum(row['kg'] || row['Kg'] || row['KG'] || row['peso'] || row['Peso']),
+    tipo: String(row['tipo'] || row['Tipo'] || row['TIPO'] || 'Pedido B2B').trim(),
+    fecha_efectiva: parseDate(row['fecha_efectiva'] || row['Fecha efectiva'] || row['Fecha Efectiva']),
+    sin_envio: parseBool(row['sin_envio'] || row['Sin envio'] || row['Sin Envio'] || false)
+  };
+}
+
+async function uploadFile(){
+  if(!currentFile) return;
+  document.getElementById('btnUpload').disabled = true;
+  document.getElementById('result').classList.remove('show');
+  document.getElementById('progress').classList.add('show');
+  setProgress(10, 'Leyendo archivo...');
+
+  try{
+    var data = await currentFile.arrayBuffer();
+    var wb = XLSX.read(data, {type:'array', cellDates:false});
+    var ws = wb.Sheets[wb.SheetNames[0]];
+    var rows = XLSX.utils.sheet_to_json(ws, {defval:''});
+
+    setProgress(30, 'Procesando ' + rows.length + ' filas...');
+
+    var records = rows.map(mapRow).filter(function(r){ return r.ref && r.ref !== ''; });
+
+    if(records.length === 0){
+      showResult('err', 'No se encontraron filas válidas. Revisa que la columna "ref" exista y tenga datos.');
+      return;
+    }
+
+    setProgress(50, 'Subiendo ' + records.length + ' registros a Supabase...');
+
+    var BATCH = 500;
+    var uploaded = 0;
+    for(var i=0; i<records.length; i+=BATCH){
+      var chunk = records.slice(i, i+BATCH);
+      var res = await SUPA.from('pedidos').upsert(chunk, {onConflict:'ref'});
+      if(res.error) throw res.error;
+      uploaded += chunk.length;
+      setProgress(50 + Math.round((uploaded/records.length)*45), 'Subidos ' + uploaded + ' de ' + records.length + '...');
+    }
+
+    setProgress(100, 'Completado');
+    showResult('ok', '✓ ' + records.length + ' registros actualizados correctamente. <a href="index.html" style="color:#065f46;font-weight:600">Ver dashboard →</a>');
+  }catch(e){
+    console.error(e);
+    showResult('err', 'Error: ' + (e.message || JSON.stringify(e)));
+  }
+
+  document.getElementById('btnUpload').disabled = false;
+}
+
+function setProgress(pct, text){
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressText').textContent = text;
+}
+
+function showResult(type, html){
+  document.getElementById('progress').classList.remove('show');
+  var el = document.getElementById('result');
+  el.className = 'result show ' + type;
+  el.innerHTML = html;
+}
+</script>
+</body>
+</html>
