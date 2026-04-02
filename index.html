@@ -2,8 +2,8 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script>if(!sessionStorage.getItem('zc_auth')){sessionStorage.setItem('auth_redirect','index.html');window.location.replace('login.html');}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Zococity · Dashboard Logístico</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -21,7 +21,7 @@
   --text:#111827;--text2:#374151;--muted:#6b7280;--muted2:#9ca3af;
 }
 *,body{font-family:'Inter',sans-serif}
-#loadOverlay{display:none;position:fixed;inset:0;background:rgba(243,244,246,.85);z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:12px}
+#loadOverlay{display:none;position:fixed;inset:0;background:rgba(243,244,246,.9);z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:12px}
 .load-spinner{width:36px;height:36px;border:3px solid #e5e7eb;border-top-color:#2563eb;border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .load-text{font-size:14px;color:#6b7280;font-weight:500}
@@ -571,6 +571,8 @@ async function initDashboard(){
   document.getElementById('p30').addEventListener('click',function(){quickFilter(30,this);});
   document.getElementById('p60').addEventListener('click',function(){quickFilter(60,this);});
   document.getElementById('pAll').addEventListener('click',function(){quickFilter(0,this);});
+  document.getElementById('btnModeGlobal').addEventListener('click',function(){if(compareMode)setMode(false);});
+  document.getElementById('btnModeCmp').addEventListener('click',function(){if(!compareMode)setMode(true);});
   document.getElementById('cmpWrap').addEventListener('click',function(){
     var chk=document.getElementById('chkCmp');chk.checked=!chk.checked;compareOn=chk.checked;
     this.classList.toggle('on',chk.checked);apply();
@@ -579,7 +581,8 @@ async function initDashboard(){
     clearMs('Cli');clearMs('Trn');
     document.getElementById('dFrom').value=D_MIN;document.getElementById('dTo').value=D_MAX;
     document.getElementById('chkCmp').checked=false;document.getElementById('cmpWrap').classList.remove('on');
-    compareOn=false;setPill(document.getElementById('pAll'));apply();
+    compareOn=false;setPill(document.getElementById('pAll'));
+    if(compareMode)setMode(false);else apply();
   });
   document.addEventListener('click',function(e){if(!e.target.closest('.ms-wrap'))closeAll();});
   document.getElementById('dFrom').addEventListener('change',function(){setPill(null);apply();});
