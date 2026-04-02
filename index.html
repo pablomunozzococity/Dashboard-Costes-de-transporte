@@ -571,8 +571,6 @@ async function initDashboard(){
   document.getElementById('p30').addEventListener('click',function(){quickFilter(30,this);});
   document.getElementById('p60').addEventListener('click',function(){quickFilter(60,this);});
   document.getElementById('pAll').addEventListener('click',function(){quickFilter(0,this);});
-  document.getElementById('btnModeGlobal').addEventListener('click',function(){if(compareMode)setMode(false);});
-  document.getElementById('btnModeCmp').addEventListener('click',function(){if(!compareMode)setMode(true);});
   document.getElementById('cmpWrap').addEventListener('click',function(){
     var chk=document.getElementById('chkCmp');chk.checked=!chk.checked;compareOn=chk.checked;
     this.classList.toggle('on',chk.checked);apply();
@@ -581,8 +579,7 @@ async function initDashboard(){
     clearMs('Cli');clearMs('Trn');
     document.getElementById('dFrom').value=D_MIN;document.getElementById('dTo').value=D_MAX;
     document.getElementById('chkCmp').checked=false;document.getElementById('cmpWrap').classList.remove('on');
-    compareOn=false;setPill(document.getElementById('pAll'));
-    if(compareMode)setMode(false);else apply();
+    compareOn=false;setPill(document.getElementById('pAll'));apply();
   });
   document.addEventListener('click',function(e){if(!e.target.closest('.ms-wrap'))closeAll();});
   document.getElementById('dFrom').addEventListener('change',function(){setPill(null);apply();});
